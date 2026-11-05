@@ -36,7 +36,6 @@
       text-underline-offset: 0.18em;
     }
 
-    /* ---------- top left: DIGITAL / CODE + projects ---------- */
     .section-nav {
       position: fixed;
       top: var(--pad-y);
@@ -45,7 +44,6 @@
       z-index: 10;
     }
     .nav-row { display: flex; flex-wrap: wrap; column-gap: 1.9em; }
-    /* ---------- top right: name, goes home ---------- */
     .site-name {
       position: fixed;
       top: var(--pad-y);
@@ -53,7 +51,6 @@
       z-index: 10;
     }
 
-    /* ---------- the area under the top bar: scrolls on its own ---------- */
     .stage {
       position: fixed;
       inset: calc(var(--pad-y) + 4.5em) 0 0 0;
@@ -63,7 +60,6 @@
     }
     .stage::-webkit-scrollbar { display: none; }
 
-    /* first screen: the working project, centered, caption underneath */
     .first {
       height: 100%;
       display: flex;
@@ -81,7 +77,6 @@
     .caption .desc { margin-top: 1.3em; }
     .caption p:empty { display: none; }
 
-    /* after scrolling: explanation images, full width of the content */
     .more {
       display: flex;
       flex-direction: column;
@@ -89,7 +84,6 @@
       gap: var(--gap);
       padding: 0 var(--pad-x) calc(var(--pad-y) + 2em);
     }
-    /* where the collage comes from: text, then the postcards in one row */
     .origin {
       min-height: 100%;
       display: flex;
@@ -98,7 +92,7 @@
       padding: 0 var(--pad-x) calc(var(--pad-y) + 1.5em);
     }
     .origin-inner { width: min(84vw, 1500px); }
-    .origin-text { max-width: 48em; line-height: 1.35; margin-bottom: 2em; }
+        .origin-text { line-height: 1.35; margin-bottom: 2em; }
     .origin-text p + p { margin-top: 1.35em; }
     .origin-text .title { margin-bottom: 1.35em; }
     .origin-row { display: flex; gap: var(--gap); align-items: flex-start; }
@@ -123,8 +117,6 @@
       height: auto;
     }
 
-    /* about the project: image on the left, text on the right,
-       the image exactly as tall as the text, the pair centered on its own screen */
     .about {
       min-height: 100%;
       display: flex;
@@ -183,17 +175,7 @@
   <div class="lightbox" id="lightbox" hidden><img id="lightbox-img" src="" alt=""></div>
 
   <script>
-    /* ==============================================================
-       PROJECTS — one tab each, in this order.
-       page     = the working project shown in the middle
-       shape    = width ÷ height of it (leave out to use all the space)
-       name / classLine / desc = the caption underneath
-                  (desc can have several lines; each "..." is one line)
-       captionFrom = where the caption starts, as a share of the width
-                  (0.16 = lines up with the collage's artboard)
-       captionCenter: true = caption centered under the work
-       images   = pictures you see when you scroll down
-       ============================================================== */
+
     var PROJECTS = [
       {
         id: "custom-collage",
@@ -205,11 +187,12 @@
         // scroll down: where the collage comes from (the postcards are in the "photos" folder)
         origin: {
           title: "Where it started: Postcards",
-          text: [
-            "Custom Collage grew out of Postcards, my first personal art project, from Spring 2025: " +
-            "collages hand-cut from secondhand magazines and glued onto postcards.",
-            "The generator turns that same process into code. You pick a background, add people and " +
-            "objects, and type your own words, the way I cut and layered each postcard by hand."
+          text:[
+            "Postcards, my first personal art project, began with vintage National Geographic magazines. " +
+            "I picked out images and words and combined them into ironic, humorous, or absurd collages, " +
+            "cutting and layering each postcard by hand, then scanning it to make a digital version.",
+            "Custom Collage turns that same process into code: you choose a background, add people and objects, " +
+            "and type your own words."
           ],
           images: [
             "photos/dancingwomen.jpeg", "photos/horse.jpeg", "photos/baptism.jpeg",
