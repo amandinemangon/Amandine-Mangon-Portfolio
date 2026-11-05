@@ -95,16 +95,11 @@
       justify-content: center;
       padding: 0 var(--pad-x) calc(var(--pad-y) + 1.5em);
     }
-    .about-row {
-      width: min(84vw, 1400px);
-      display: flex;
-      align-items: flex-start;
-      gap: var(--gap);
-    }
-    .about-photo { flex: none; width: 40%; }
-    .about-photo img { display: block; width: 100%; height: auto; }
-    .about-photo .placeholder {
-      width: 100%;
+    .about-row { display: flex; align-items: flex-start; gap: calc(var(--gap) * 0.9); }
+    .about-row img { display: block; flex: none; }
+    .about-row .placeholder {
+      flex: none;
+      width: 32vw;
       aspect-ratio: 4 / 5;
       background: #eee;
       color: #999;
@@ -112,8 +107,9 @@
       align-items: center;
       justify-content: center;
     }
-    .about-text { flex: 1; line-height: 1.35; }
-    .about-text p + p { margin-top: 1.35em; }
+    .about-row.stacked { flex-direction: column; padding: 3em 0; }
+    .about-text { flex: none; line-height: 1.3; }
+    .about-text p + p { margin-top: 1.3em; }
 
     /* ---------- phones ---------- */
     @media (max-width: 760px) {
@@ -122,8 +118,9 @@
       .first { height: auto; padding-top: 1em; padding-bottom: 3em; }
       .film { width: 100% !important; }
       .about { min-height: 0; padding-bottom: 3em; }
-      .about-row { width: 100%; flex-direction: column; }
-      .about-photo { width: 100%; }
+      .about-row { flex-direction: column; }
+      .about-row img, .about-row .placeholder { width: 100% !important; height: auto !important; }
+      .about-text { width: auto !important; }
     }
   </style>
 </head>
@@ -156,12 +153,21 @@
         classLine: "Still and Moving Images; NYU IDM, Fall 2026.",
         desc: "An experimental film made of still images, text, and no audio.",
 
-        // PHOTO: put it in the "video" folder with this name (or change the name here)
-        aboutPhoto: "video/thereyouare-photo.jpg",
-        // LONGER CAPTION: one "..." per paragraph, each followed by a comma except the last
+        // PHOTO: in the "video" folder, with exactly this name
+        aboutPhoto: "video/singleimage.JPG",
+        // next to the photo, like The Five Stages of Grief:
+        // first the photo's caption, then how the single image became the film
         about: [
-          "There You Are is an experimental film made of still images, text, and no audio.",
-          "Write the longer caption here."
+          "This image is about feeling unsure of who you are when growing up. The paint suggests a decision, " +
+          "but without a hand or paintbrush visible, we can’t tell if the girl is about to make a change or already has. " +
+          "The shadows symbolize impermanence and the passage of time, and are a reflection of who she is now, " +
+          "and who she might become.",
+
+          "There You Are began as a continuation of this single image: I wanted to see what would happen if one " +
+          "photograph grew into a series of images, and the series into a film.",
+          "In that shift, the original message changed slightly. The uncertainty of growing up became a game of " +
+          "hide-and-seek, with the girl appearing and disappearing from frame to frame. The result feels eerie and " +
+          "childish at the same time, like a game you played as a kid that turns strange when you look back on it."
         ]
       },
       {
@@ -235,27 +241,27 @@
         first.appendChild(film);
         stage.appendChild(first);
 
+        aboutRow = null;
         if (piece.about) {
           var about = el("section", "about");
-          var row = el("div", "about-row");
-          var photo = el("div", "about-photo");
+          aboutRow = el("div", "about-row");
           var img = el("img");
           img.alt = piece.name;
+          img.addEventListener("load", sizeAbout);
           img.addEventListener("error", function () {     // photo not added yet → grey box
-            photo.innerHTML = "";
-            photo.appendChild(el("div", "placeholder", "Photo"));
+            img.replaceWith(el("div", "placeholder", "Photo"));
+            sizeAbout();
           });
           img.src = piece.aboutPhoto || "";
-          photo.appendChild(img);
           var text = el("div", "about-text");
           piece.about.forEach(function (html) {
             var p = el("p");
             p.innerHTML = html;
             text.appendChild(p);
           });
-          row.appendChild(photo);
-          row.appendChild(text);
-          about.appendChild(row);
+          aboutRow.appendChild(img);
+          aboutRow.appendChild(text);
+          about.appendChild(aboutRow);
           stage.appendChild(about);
         }
         size();
@@ -276,6 +282,60 @@
         var w = Math.min(W * 0.7, 1300, H * ratio);
         film.style.width = Math.max(w, 200) + "px";
       }
+
+      var aboutRow = null;
+      function sizeAbout() {
+        if (!aboutRow) return;
+        var img = aboutRow.querySelector("img");
+        var text = aboutRow.querySelector(".about-text");
+        var total = Math.min(window.innerWidth * 0.88, 1500);   // width of photo + text together
+        aboutRow.classList.remove("stacked");
+        if (window.matchMedia("(max-width: 760px)").matches) return;
+        if (!img || !img.naturalWidth) {
+          if (img) return;                        // still loading
+          text.style.width = Math.min(total * 0.55, 900) + "px";
+          return;
+        }
+        var ratio = img.naturalWidth / img.naturalHeight;
+        var gap = parseFloat(getComputedStyle(aboutRow).columnGap) || 0;
+        function widthWith(t) {                   // full width of the pair when the text is t wide
+          text.style.width = t + "px";
+          return t + gap + text.offsetHeight * ratio;
+        }
+        var a = total * 0.15, b = total, n;       // narrowest the pair can be
+        for (n = 0; n < 24; n++) {
+          var m1 = a + (b - a) / 3, m2 = b - (b - a) / 3;
+          if (widthWith(m1) < widthWith(m2)) b = m2; else a = m1;
+        }
+        var t = (a + b) / 2;
+        var SHARE = 0.52, lo2 = t, hi2 = total;  // first choice: photo about half as wide as the text
+        for (n = 0; n < 22; n++) {
+          var m = (lo2 + hi2) / 2;
+          if (widthWith(m) - gap - m > SHARE * m) lo2 = m; else hi2 = m;
+        }
+        if (widthWith(hi2) <= total) {
+          t = hi2;
+        } else if (widthWith(t) <= total) {
+          var lo = t, hi = total;
+          for (n = 0; n < 22; n++) {
+            var mid = (lo + hi) / 2;
+            if (widthWith(mid) <= total) lo = mid; else hi = mid;
+          }
+          t = lo;
+        } else if (widthWith(t) > window.innerWidth * 0.94) {
+          aboutRow.classList.add("stacked");     // too narrow: photo on top, text under
+          text.style.width = Math.min(total, 1000) + "px";
+          img.style.width = Math.min(total, 1000) + "px";
+          img.style.height = "auto";
+          return;
+        }
+        text.style.width = t + "px";
+        var h = text.offsetHeight;
+        img.style.height = h + "px";
+        img.style.width = h * ratio + "px";
+      }
+      window.addEventListener("resize", sizeAbout);
+      if (document.fonts) document.fonts.ready.then(sizeAbout);
 
       window.addEventListener("resize", size);
       window.addEventListener("hashchange", load);
