@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sound &amp; Video | Amandine Mangon</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+
+  <style>
+    :root {
+      --pad-x: clamp(18px, 2.3vw, 44px);   /* left/right page margin (same as homepage) */
+      --pad-y: clamp(18px, 3.6vh, 40px);   /* top/bottom page margin (same as homepage) */
+      --fs: clamp(12px, calc(0.5vw + 6.5px), 17px);
+      --gap: clamp(28px, 4vw, 72px);       /* space between the photo and the longer caption */
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body { background: #fff; }
+    body {
+      color: #000;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-weight: 700;
+      font-size: var(--fs);
+      line-height: 1.25;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    .tabs a:hover,
+    .current,
+    .site-name:hover {
+      text-decoration: underline;
+      text-decoration-thickness: 0.09em;
+      text-underline-offset: 0.18em;
+    }
+    .text-link {
+      text-decoration: underline;
+      text-decoration-thickness: 0.09em;
+      text-underline-offset: 0.18em;
+    }
+    .text-link:hover { opacity: 0.6; }
+
+    /* ---------- top left: SOUND & VIDEO + its pieces ---------- */
+    .section-nav {
+      position: fixed;
+      top: var(--pad-y);
+      left: var(--pad-x);
+      right: 30vw;
+      z-index: 10;
+    }
+    .nav-row { display: flex; flex-wrap: wrap; column-gap: 1.9em; }
+
+    /* ---------- top right: name, goes home ---------- */
+    .site-name {
+      position: fixed;
+      top: var(--pad-y);
+      right: var(--pad-x);
+      z-index: 10;
+    }
+
+    /* ---------- the area under the top bar: scrolls on its own ---------- */
+    .stage {
+      position: fixed;
+      inset: calc(var(--pad-y) + 4.5em) 0 0 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: none;
+    }
+    .stage::-webkit-scrollbar { display: none; }
+
+    /* first screen: the video, centered, caption underneath (same width) */
+    .first {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 var(--pad-x) calc(var(--pad-y) + 1.5em);
+    }
+    .film video {
+      display: block;
+      width: 100%;
+      background: #000;
+    }
+    .caption { margin-top: 1.1em; line-height: 1.35; }
+    .caption .desc { margin-top: 1.3em; }
+    .caption p + p.more-line { margin-top: 1.3em; }
+
+    /* after scrolling: photo on the left, longer caption on the right */
+    .about {
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 var(--pad-x) calc(var(--pad-y) + 1.5em);
+    }
+    .about-row {
+      width: min(84vw, 1400px);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--gap);
+    }
+    .about-photo { flex: none; width: 40%; }
+    .about-photo img { display: block; width: 100%; height: auto; }
+    .about-photo .placeholder {
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      background: #eee;
+      color: #999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .about-text { flex: 1; line-height: 1.35; }
+    .about-text p + p { margin-top: 1.35em; }
+
+    /* ---------- phones ---------- */
+    @media (max-width: 760px) {
+      .section-nav { right: var(--pad-x); }
+      .stage { position: static; overflow: visible; padding-top: calc(var(--pad-y) + 5em); }
+      .first { height: auto; padding-top: 1em; padding-bottom: 3em; }
+      .film { width: 100% !important; }
+      .about { min-height: 0; padding-bottom: 3em; }
+      .about-row { width: 100%; flex-direction: column; }
+      .about-photo { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="section-nav">
+    <div class="nav-row"><span>Sound &amp; Video</span></div>
+    <div class="nav-row tabs" id="tabs"></div>
+  </nav>
+
+  <a class="site-name" href="index.html">Amandine Mangon</a>
+
+  <main class="stage" id="stage"></main>
+
+  <script>
+    /* ==============================================================
+       PIECES — one tab each, in this order.
+       video    = the video file
+       name / classLine / desc = the caption under the video
+       more     = extra lines under the caption (can include links)
+       aboutPhoto / about = what you see when you scroll down:
+                  a photo on the left and a longer caption on the right
+                  (leave them out for no second part)
+       ============================================================== */
+    var PIECES = [
+      {
+        id: "there-you-are",
+        name: "There You Are",
+        video: "video/ThereYouAre.mp4",
+        classLine: "Still and Moving Images; NYU IDM, Fall 2026.",
+        desc: "An experimental film made of still images, text, and no audio.",
+
+        // PHOTO: put it in the "video" folder with this name (or change the name here)
+        aboutPhoto: "video/thereyouare-photo.jpg",
+        // LONGER CAPTION: one "..." per paragraph, each followed by a comma except the last
+        about: [
+          "There You Are is an experimental film made of still images, text, and no audio.",
+          "Write the longer caption here."
+        ]
+      },
+      {
+        id: "melody-nelson",
+        name: "Melody Nelson",
+        video: "sound/sounddesign.mp4",
+        title: "Obsession",                       // the first line of the caption
+        classLine: "Audio Foundation Studio; NYU IDM.",
+        desc: "Sound design for Serge Gainsbourg’s “Histoire de Melody Nelson”; Reaper.",
+        more: [
+          'Like <a class="text-link" href="graphic-design.html#iconoclast">Iconoclast</a>, this piece is about ' +
+          'Serge Gainsbourg and Jane Birkin, a thread back to my French roots.'
+        ]
+      }
+    ];
+
+    /* ============================================================== */
+
+    (function () {
+      var tabs = document.getElementById("tabs");
+      var stage = document.getElementById("stage");
+      var piece, film, video, caption;
+
+      PIECES.forEach(function (p) {
+        var a = document.createElement("a");
+        a.href = "#" + p.id;
+        a.textContent = p.name;
+        a.setAttribute("data-id", p.id);
+        tabs.appendChild(a);
+      });
+
+      function el(tag, cls, text) {
+        var e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (text != null) e.textContent = text;
+        return e;
+      }
+
+      function load() {
+        var id = (location.hash || "").slice(1).toLowerCase();
+        piece = PIECES.filter(function (p) { return p.id === id; })[0] || PIECES[0];
+        Array.prototype.forEach.call(tabs.children, function (a) {
+          a.classList.toggle("current", a.getAttribute("data-id") === piece.id);
+        });
+        document.title = piece.name + " | Amandine Mangon";
+
+        // (switching tabs removes the old video, which also stops it)
+        stage.innerHTML = "";
+        stage.scrollTop = 0;
+        window.scrollTo(0, 0);
+
+        var first = el("section", "first");
+        film = el("figure", "film");
+        video = el("video");
+        video.src = piece.video;
+        video.controls = true;
+        video.setAttribute("playsinline", "");
+        video.preload = "metadata";
+        video.addEventListener("loadedmetadata", size);
+        caption = el("figcaption", "caption");
+        caption.appendChild(el("p", null, piece.title || piece.name));
+        caption.appendChild(el("p", null, piece.classLine || ""));
+        caption.appendChild(el("p", "desc", piece.desc || ""));
+        (piece.more || []).forEach(function (html) {
+          var p = el("p", "more-line");
+          p.innerHTML = html;
+          caption.appendChild(p);
+        });
+        film.appendChild(video);
+        film.appendChild(caption);
+        first.appendChild(film);
+        stage.appendChild(first);
+
+        if (piece.about) {
+          var about = el("section", "about");
+          var row = el("div", "about-row");
+          var photo = el("div", "about-photo");
+          var img = el("img");
+          img.alt = piece.name;
+          img.addEventListener("error", function () {     // photo not added yet → grey box
+            photo.innerHTML = "";
+            photo.appendChild(el("div", "placeholder", "Photo"));
+          });
+          img.src = piece.aboutPhoto || "";
+          photo.appendChild(img);
+          var text = el("div", "about-text");
+          piece.about.forEach(function (html) {
+            var p = el("p");
+            p.innerHTML = html;
+            text.appendChild(p);
+          });
+          row.appendChild(photo);
+          row.appendChild(text);
+          about.appendChild(row);
+          stage.appendChild(about);
+        }
+        size();
+      }
+
+      /* The video is as big as fits on the first screen (with room for the
+         caption), and the caption is exactly as wide as the video. */
+      function size() {
+        if (!film) return;
+        if (window.matchMedia("(max-width: 760px)").matches) { film.style.width = ""; return; }
+        var first = stage.querySelector(".first");
+        var cs = getComputedStyle(first);
+        var W = first.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        var ratio = (video.videoWidth && video.videoHeight) ? video.videoWidth / video.videoHeight : 16 / 9;
+        film.style.width = Math.min(W * 0.7, 1300) + "px";
+        var room = caption.offsetHeight + parseFloat(getComputedStyle(caption).marginTop);
+        var H = first.clientHeight - parseFloat(cs.paddingBottom) - room;
+        var w = Math.min(W * 0.7, 1300, H * ratio);
+        film.style.width = Math.max(w, 200) + "px";
+      }
+
+      window.addEventListener("resize", size);
+      window.addEventListener("hashchange", load);
+      load();
+    })();
+  </script>
+  <script src="menu.js"></script>
+</body>
+</html>

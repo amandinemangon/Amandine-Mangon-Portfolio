@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Code | Amandine Mangon</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+
+  <style>
+    :root {
+      --pad-x: clamp(18px, 2.3vw, 44px);   /* left/right page margin (same as homepage) */
+      --pad-y: clamp(18px, 3.6vh, 40px);   /* top/bottom page margin (same as homepage) */
+      --fs: clamp(12px, calc(0.5vw + 6.5px), 17px);
+      --gap: clamp(14px, 1.5vw, 28px);
+      --content-w: min(70vw, 1300px);      /* widest the work (and the explanation images) can be */
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body { background: #fff; }
+    body {
+      color: #000;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-weight: 700;
+      font-size: var(--fs);
+      line-height: 1.25;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    a:hover,
+    .current {
+      text-decoration: underline;
+      text-decoration-thickness: 0.09em;
+      text-underline-offset: 0.18em;
+    }
+
+    /* ---------- top left: DIGITAL / CODE + projects ---------- */
+    .section-nav {
+      position: fixed;
+      top: var(--pad-y);
+      left: var(--pad-x);
+      right: 30vw;
+      z-index: 10;
+    }
+    .nav-row { display: flex; flex-wrap: wrap; column-gap: 1.9em; }
+    /* ---------- top right: name, goes home ---------- */
+    .site-name {
+      position: fixed;
+      top: var(--pad-y);
+      right: var(--pad-x);
+      z-index: 10;
+    }
+
+    /* ---------- the area under the top bar: scrolls on its own ---------- */
+    .stage {
+      position: fixed;
+      inset: calc(var(--pad-y) + 4.5em) 0 0 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: none;
+    }
+    .stage::-webkit-scrollbar { display: none; }
+
+    /* first screen: the working project, centered, caption underneath */
+    .first {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 var(--pad-x) calc(var(--pad-y) + 1.5em);
+    }
+    .piece { display: flex; flex-direction: column; }
+    .piece iframe {
+      display: block;
+      border: 0;
+      background: #fff;
+    }
+    .caption { margin-top: 1.1em; }
+    .caption .desc { margin-top: 1.3em; }
+    .caption p:empty { display: none; }
+
+    /* after scrolling: explanation images, full width of the content */
+    .more {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--gap);
+      padding: 0 var(--pad-x) calc(var(--pad-y) + 2em);
+    }
+    /* where the collage comes from: text, then the postcards in one row */
+    .origin {
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 var(--pad-x) calc(var(--pad-y) + 1.5em);
+    }
+    .origin-inner { width: min(84vw, 1500px); }
+    .origin-text { max-width: 48em; line-height: 1.35; margin-bottom: 2em; }
+    .origin-text p + p { margin-top: 1.35em; }
+    .origin-text .title { margin-bottom: 1.35em; }
+    .origin-row { display: flex; gap: var(--gap); align-items: flex-start; }
+    .origin-row button {
+      flex: none; padding: 0; border: 0; background: none; cursor: zoom-in;
+    }
+    .origin-row img { display: block; width: 100%; height: 100%; transition: opacity 0.25s ease; }
+    .origin-row button:hover img { opacity: 0.82; }
+    .lightbox {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(255, 255, 255, 0.93);
+      display: flex; align-items: center; justify-content: center;
+      padding: 4vh 4vw; cursor: zoom-out;
+    }
+    .lightbox[hidden] { display: none; }
+    .lightbox img { display: block; max-width: 92vw; max-height: 90vh; }
+
+    .more img {
+      display: block;
+      width: var(--content-w);
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* about the project: image on the left, text on the right,
+       the image exactly as tall as the text, the pair centered on its own screen */
+    .about {
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 var(--pad-x) calc(var(--pad-y) + 1.5em);
+    }
+    .about-row { display: flex; align-items: flex-start; gap: calc(var(--gap) * 1.6); }
+    .about-row img { display: block; flex: none; }
+    .about-row.stacked { flex-direction: column; padding: 3em 0; }
+    .about-text { flex: none; line-height: 1.3; }
+    .about-text p + p { margin-top: 1.3em; }
+    .about-text a {
+      text-decoration: underline;
+      text-decoration-thickness: 0.09em;
+      text-underline-offset: 0.18em;
+    }
+    .about-text a:hover { opacity: 0.6; }
+
+    /* ---------- phones ---------- */
+    .rotate-hint { display: none; margin-top: 1.1em; }
+    @media (max-width: 760px) and (orientation: portrait) {
+      .rotate-hint { display: block; }
+    }
+
+    @media (max-width: 760px) {
+      .section-nav { right: var(--pad-x); }
+      .stage { inset: calc(var(--pad-y) + 6em) 0 0 0; }
+      .first { height: auto; padding-top: 1em; padding-bottom: 3em; }
+      .piece { width: 100%; }
+      .more img { width: 100%; }
+      .origin { min-height: 0; padding-bottom: 3em; }
+      .origin-inner { width: 100%; }
+      .origin-row { flex-wrap: wrap; }
+      .origin-row button { width: calc(50% - var(--gap) / 2) !important; height: auto !important; }
+      .origin-row img { height: auto; }
+      .about { min-height: 0; padding-bottom: 3em; }
+      .about-row { flex-direction: column; }
+      .about-row img { width: 100% !important; height: auto !important; }
+      .about-text { width: auto !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="section-nav">
+    <div class="nav-row"><span>Code</span></div>
+    <div class="nav-row" id="tabs"></div>
+  </nav>
+
+  <a class="site-name" href="index.html">Amandine Mangon</a>
+
+  <main class="stage" id="stage"></main>
+
+  <!-- enlarged postcard: Esc or click anywhere to close, arrows to move -->
+  <div class="lightbox" id="lightbox" hidden><img id="lightbox-img" src="" alt=""></div>
+
+  <script>
+    /* ==============================================================
+       PROJECTS — one tab each, in this order.
+       page     = the working project shown in the middle
+       shape    = width ÷ height of it (leave out to use all the space)
+       name / classLine / desc = the caption underneath
+                  (desc can have several lines; each "..." is one line)
+       captionFrom = where the caption starts, as a share of the width
+                  (0.16 = lines up with the collage's artboard)
+       captionCenter: true = caption centered under the work
+       images   = pictures you see when you scroll down
+       ============================================================== */
+    var PROJECTS = [
+      {
+        id: "custom-collage",
+        name: "Custom Collage",
+        page: "collage-embed.html",
+        shape: 1840 / 880,
+        captionFrom: 0.16,
+        rotateHint: true,       // phones held upright: "turn your phone sideways" under it
+        // scroll down: where the collage comes from (the postcards are in the "photos" folder)
+        origin: {
+          title: "Where it started: Postcards",
+          text: [
+            "Custom Collage grew out of Postcards, my first personal art project, from Spring 2025: " +
+            "collages hand-cut from secondhand magazines and glued onto postcards.",
+            "The generator turns that same process into code. You pick a background, add people and " +
+            "objects, and type your own words, the way I cut and layered each postcard by hand."
+          ],
+          images: [
+            "photos/dancingwomen.jpeg", "photos/horse.jpeg", "photos/baptism.jpeg",
+            "photos/nuns.jpeg", "photos/death.jpeg"
+          ]
+        },
+        classLine: "Creative Coding; NYU IDM, Fall 2025.",
+        desc: [
+          "Creative coding final project; p5.js.",
+          "Seen on the home page. Inspired by my postcard series, my first personal art project, from Spring 2025."
+        ],
+        images: []
+      },
+      {
+        id: "exquisite-corpse",
+        name: "Exquisite Corpse",
+        page: "exquisite-corpse/index.html",
+        noCaption: true,
+        classLine: "",          // WRITE THE CLASS LINE HERE, e.g. "Creative Coding; NYU IDM, Fall 2025."
+        desc: [""],             // WRITE THE DESCRIPTION HERE, e.g. "Click each part to change it; p5.js."
+        images: [
+          "exquisite-corpse/ExquisiteCorpseExplained1.jpeg",
+          "exquisite-corpse/ExquisiteCorpseExplained2.jpeg"
+        ]
+      }
+      ,
+      {
+        id: "five-stages-of-grief",
+        name: "The Five Stages of Grief",
+        page: "five-stages-of-grief/index.html",
+        noCaption: true,
+        // image + text you see when you scroll down
+        aboutImage: "five-stages-of-grief/5stagesoriginal.jpg",
+        about: [
+          'The Five Stages of Grief is a coded visual animation made in collaboration with ' +
+          '<a href="https://irisazuloconnor.com/" target="_blank" rel="noopener">Iris Azul O’Connor</a> for ' +
+          '<a href="projects.html#ineverseeyou">ineverseeyou</a>, an art collective co-founded by Amandine Mangon ' +
+          'with over 20 other artists. Exquisite Corpse (Cycle 1: Entanglement, Project 1: Exploration) was also made for ' +
+          '<a href="projects.html#ineverseeyou">ineverseeyou</a>. The Five Stages of Grief was part of Cycle 1, ' +
+          'Project 2: Secret Santa. The project had two phases: in phase 1, each artist created a physical piece; ' +
+          'in phase 2, another artist manipulated it digitally.',
+
+          'For this piece, Iris painted the background (a close-up of a face) and used found art to add the other four pieces. ' +
+          'I assigned each of the five parts to one of the five stages of grief. The face with the added tear symbolizes depression, ' +
+          'the top-left corner with the added birds represents acceptance, the top-right corner is anger, the bottom-left is denial, ' +
+          'and the bottom-right is bargaining. The pieces are not shown in the usual linear order of the stages of grief ' +
+          '(denial, anger, bargaining, depression, and acceptance) to show that grief has no concrete shape. ' +
+          'The animations also happen all at once, which confuses the viewer: the audience must focus on one piece at a time ' +
+          'to understand which stage it represents. There is no sound, just visuals. Made with Adobe Illustrator and p5.js.'
+        ],
+        images: []
+      }
+    ];
+
+    /* ============================================================== */
+
+    (function () {
+      var tabs = document.getElementById("tabs");
+      var stage = document.getElementById("stage");
+      var project, frame, caption, aboutRow;
+
+      PROJECTS.forEach(function (p) {
+        var a = document.createElement("a");
+        a.href = "#" + p.id;
+        a.textContent = p.name;
+        a.setAttribute("data-id", p.id);
+        tabs.appendChild(a);
+      });
+
+      function el(tag, cls, text) {
+        var e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (text != null) e.textContent = text;
+        return e;
+      }
+
+      function load() {
+        var id = (location.hash || "").slice(1).toLowerCase();
+        project = PROJECTS.filter(function (p) { return p.id === id; })[0] || PROJECTS[0];
+        Array.prototype.forEach.call(tabs.children, function (a) {
+          a.classList.toggle("current", a.getAttribute("data-id") === project.id);
+        });
+        document.title = project.name + " | Amandine Mangon";
+
+        // (switching tabs removes the old project, which also stops its sound)
+        stage.innerHTML = "";
+        stage.scrollTop = 0;
+
+        var first = el("section", "first");
+        var piece = el("div", "piece");
+        frame = el("iframe");
+        frame.src = project.page;
+        frame.title = project.name;
+        frame.setAttribute("allow", "autoplay");
+        caption = el("div", "caption");
+        caption.appendChild(el("p", null, project.name));
+        caption.appendChild(el("p", null, project.classLine || ""));
+        (project.desc || []).forEach(function (line, i) {
+          caption.appendChild(el("p", i === 0 ? "desc" : null, line));
+        });
+        piece.appendChild(frame);
+        if (project.rotateHint) piece.appendChild(el("p", "rotate-hint", "Turn your phone sideways to play"));
+        piece.appendChild(caption);
+        if (project.noCaption) caption.style.display = "none";
+        first.appendChild(piece);
+        stage.appendChild(first);
+
+        aboutRow = null;
+        if (project.about) {
+          var about = el("section", "about");
+          aboutRow = el("div", "about-row");
+          var text = el("div", "about-text");
+          project.about.forEach(function (html) {
+            var p = el("p");
+            p.innerHTML = html;
+            text.appendChild(p);
+          });
+          if (project.aboutImage) {
+            var pic = el("img");
+            pic.src = project.aboutImage;
+            pic.alt = project.name;
+            pic.addEventListener("load", sizeAbout);
+            pic.addEventListener("error", function () { pic.remove(); sizeAbout(); });   // not added yet → just the text
+            aboutRow.appendChild(pic);
+          }
+          aboutRow.appendChild(text);
+          about.appendChild(aboutRow);
+          stage.appendChild(about);
+        }
+
+        originRow = null;
+        if (project.origin) {
+          var origin = el("section", "origin");
+          var inner = el("div", "origin-inner");
+          var otext = el("div", "origin-text");
+          otext.appendChild(el("p", "title", project.origin.title));
+          project.origin.text.forEach(function (t) { otext.appendChild(el("p", null, t)); });
+          inner.appendChild(otext);
+          originRow = el("div", "origin-row");
+          originSrcs = project.origin.images.slice();
+          originRatios = [];
+          originSrcs.forEach(function (src, i) {
+            var b = el("button");
+            b.type = "button";
+            b.setAttribute("aria-label", "Enlarge postcard " + (i + 1));
+            var im = el("img");
+            im.alt = "Postcard collage";
+            im.addEventListener("load", function () { originRatios[i] = im.naturalWidth / im.naturalHeight; sizeOrigin(); });
+            im.src = src;
+            b.appendChild(im);
+            b.addEventListener("click", function () { openBox(i); });
+            originRow.appendChild(b);
+          });
+          inner.appendChild(originRow);
+          origin.appendChild(inner);
+          stage.appendChild(origin);
+        }
+
+        if (project.images && project.images.length) {
+          var more = el("section", "more");
+          project.images.forEach(function (src) {
+            var img = el("img");
+            img.src = src;
+            img.alt = project.name;
+            img.loading = "lazy";
+            img.addEventListener("error", function () { img.remove(); });   // not added yet → just hide it
+            more.appendChild(img);
+          });
+          stage.appendChild(more);
+        }
+        size();
+      }
+
+      /* Make the project as big as fits in the first screen,
+         with its caption underneath, the same width as the project. */
+      function size() {
+        if (!frame) return;
+        var phone = window.matchMedia("(max-width: 760px)").matches;
+        var first = stage.querySelector(".first");
+        var cs = getComputedStyle(first);
+        var maxW = Math.min(window.innerWidth * 0.7, 1300);
+        if (phone) maxW = first.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        caption.style.width = maxW + "px";
+        var capH = caption.offsetHeight + parseFloat(getComputedStyle(caption).marginTop);
+        var H = first.clientHeight - parseFloat(cs.paddingBottom) - capH;
+        var w = maxW, h = phone ? window.innerHeight * 0.7 : H;
+        if (project.shape) {
+          h = w / project.shape;
+          if (!phone && h > H) { h = H; w = h * project.shape; }
+        }
+        // phones held sideways: keep the whole project on the screen
+        if (phone && window.innerWidth > window.innerHeight) {
+          var maxH = stage.clientHeight - 24;
+          if (h > maxH) { h = maxH; if (project.shape) w = h * project.shape; }
+          first.querySelector(".piece").style.alignItems = "center";
+        }
+        frame.style.width = w + "px";
+        frame.style.height = h + "px";
+        var from = phone ? 0 : (project.captionFrom || 0);
+        caption.style.marginLeft = w * from + "px";
+        caption.style.width = w * (1 - 2 * from) + "px";
+        caption.style.textAlign = project.captionCenter ? "center" : "left";
+        sizeAbout();
+      }
+
+      /* Image + text together are as wide as the pictures underneath.
+         The image is exactly as tall as the text, so we try text widths
+         until image + gap + text add up to that width. */
+      function sizeAbout() {
+        if (!aboutRow) return;
+        var img = aboutRow.querySelector("img");
+        var text = aboutRow.querySelector(".about-text");
+        var total = Math.min(window.innerWidth * 0.88, 1500);   // width of image + text together
+        aboutRow.classList.remove("stacked");
+        if (window.matchMedia("(max-width: 760px)").matches) return;
+        if (!img || !img.naturalWidth) {
+          if (img) return;                        // still loading
+          text.style.width = Math.min(total, 1000) + "px";
+          return;
+        }
+        var ratio = img.naturalWidth / img.naturalHeight;
+        var gap = parseFloat(getComputedStyle(aboutRow).columnGap) || 0;
+        // full width of the pair when the text is t wide
+        function widthWith(t) {
+          text.style.width = t + "px";
+          return t + gap + text.offsetHeight * ratio;
+        }
+        // narrowest the pair can be (narrower text = taller text = wider image)
+        var a = total * 0.15, b = total, n;
+        for (n = 0; n < 24; n++) {
+          var m1 = a + (b - a) / 3, m2 = b - (b - a) / 3;
+          if (widthWith(m1) < widthWith(m2)) b = m2; else a = m1;
+        }
+        var t = (a + b) / 2;
+        // first choice: like the mockup, the image about half as wide as the text
+        var SHARE = 0.52, lo2 = t, hi2 = total;
+        for (n = 0; n < 22; n++) {
+          var m = (lo2 + hi2) / 2;
+          if (widthWith(m) - gap - m > SHARE * m) lo2 = m; else hi2 = m;
+        }
+        if (widthWith(hi2) <= total) {
+          t = hi2;
+        } else if (widthWith(t) <= total) {
+          // widest text that still fits, so the text isn't squeezed
+          var lo = t, hi = total;
+          for (n = 0; n < 22; n++) {
+            var mid = (lo + hi) / 2;
+            if (widthWith(mid) <= total) lo = mid; else hi = mid;
+          }
+          t = lo;
+        } else if (widthWith(t) > window.innerWidth * 0.94) {
+          // screen too narrow for side by side: image on top, text under
+          aboutRow.classList.add("stacked");
+          text.style.width = Math.min(total, 1000) + "px";
+          img.style.width = Math.min(total, 1000) + "px";
+          img.style.height = "auto";
+          return;
+        }
+        text.style.width = t + "px";
+        var h = text.offsetHeight;
+        img.style.height = h + "px";
+        img.style.width = h * ratio + "px";
+      }
+
+      // postcards in one row, all the same height, filling the width
+      var originRow = null, originSrcs = [], originRatios = [];
+      function sizeOrigin() {
+        if (!originRow) return;
+        if (window.matchMedia("(max-width: 760px)").matches) return;
+        for (var i = 0; i < originSrcs.length; i++) if (!originRatios[i]) return;   // wait for all
+        var gap = parseFloat(getComputedStyle(originRow).columnGap) || 0;
+        var W = originRow.clientWidth - gap * (originSrcs.length - 1);
+        var h = W / originRatios.reduce(function (a, r) { return a + r; }, 0);
+        Array.prototype.forEach.call(originRow.children, function (b, i) {
+          b.style.width = h * originRatios[i] + "px";
+          b.style.height = h + "px";
+        });
+      }
+      window.addEventListener("resize", sizeOrigin);
+
+      // enlarged postcard
+      var box = document.getElementById("lightbox");
+      var big = document.getElementById("lightbox-img");
+      var boxAt = -1;
+      function openBox(i) {
+        boxAt = (i + originSrcs.length) % originSrcs.length;
+        big.src = originSrcs[boxAt];
+        box.hidden = false;
+      }
+      function closeBox() { box.hidden = true; boxAt = -1; }
+      box.addEventListener("click", closeBox);
+      document.addEventListener("keydown", function (e) {
+        if (boxAt < 0) return;
+        if (e.key === "Escape") closeBox();
+        else if (e.key === "ArrowRight") { e.preventDefault(); openBox(boxAt + 1); }
+        else if (e.key === "ArrowLeft") { e.preventDefault(); openBox(boxAt - 1); }
+      });
+      window.addEventListener("hashchange", closeBox);
+
+      window.addEventListener("resize", size);
+      if (document.fonts) document.fonts.ready.then(sizeAbout);
+      window.addEventListener("hashchange", load);
+      load();
+    })();
+  </script>
+    <script src="menu.js"></script>
+</body>
+</html>

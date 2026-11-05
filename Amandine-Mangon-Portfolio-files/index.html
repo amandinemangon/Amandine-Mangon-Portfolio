@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Amandine Mangon</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+
+  <!-- custom collage (files are in the "collage" folder) -->
+  <script src="collage/p5.min.js"></script>
+  <script src="collage/p5.sound.min.js"></script>
+  <script src="collage/sketch.js"></script>
+
+  <style>
+    /* =====================================================================
+       AMANDINE MANGON — shared look for every page
+       ===================================================================== */
+
+    :root {
+      --pad-x: clamp(18px, 2.3vw, 44px);       /* left/right page margin */
+      --pad-y: clamp(18px, 3.6vh, 40px);       /* top/bottom page margin */
+      --fs: clamp(12px, calc(0.5vw + 6.5px), 17px);
+      --lh: 1.25;
+      --col: 2.1em;                             /* text column next to the menu icon */
+      --indent: 1.35em;                         /* menu sub-level indent */
+
+
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body { background: #fff; }
+    body {
+      color: #000;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-weight: 700;
+      font-size: var(--fs);
+      line-height: var(--lh);
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    a:hover,
+    .current {
+      text-decoration: underline;
+      text-decoration-thickness: 0.09em;
+      text-underline-offset: 0.18em;
+    }
+    img { display: block; }
+
+    /* ---------------------------------------------------------------------
+       HEADER (made by menu.js)
+       --------------------------------------------------------------------- */
+
+    .hdr-line {
+      position: fixed;
+      top: var(--pad-y);
+      left: var(--pad-x);
+      right: var(--pad-x);
+      height: calc(var(--lh) * 1em);
+      z-index: 50;
+      pointer-events: none;
+    }
+    .hdr-line > * { pointer-events: auto; }
+
+    .menu-btn {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1.05em;
+      height: 0.82em;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: none;
+      border: 0;
+      padding: 0;
+      cursor: pointer;
+    }
+    .menu-btn::before { content: ""; position: absolute; inset: -12px; }
+    .menu-btn span { display: block; height: 0.17em; background: #000; }
+
+    /* AMANDINE MANGON: next to the menu icon on the home page,
+       on the right when the menu is open and on every other page */
+    .site-name {
+      position: absolute;
+      top: 0;
+      left: var(--col);
+      white-space: nowrap;
+      transition:
+        left 0.75s cubic-bezier(0.65, 0, 0.35, 1),
+        transform 0.75s cubic-bezier(0.65, 0, 0.35, 1);
+    }
+    .name-right .site-name { left: 100%; transform: translateX(-100%); }
+    .no-anim .site-name { transition: none; }
+
+    /* full menu */
+    .menu-tree {
+      position: fixed;
+      z-index: 50;
+      top: calc(var(--pad-y) + var(--lh) * 1em + 0.35em);
+      left: calc(var(--pad-x) + var(--col));
+      max-height: calc(100vh - var(--pad-y) * 2 - 2em);
+      overflow-y: auto;
+      background: #fff;
+      padding: 0 0.2em 0.6em 0;
+      list-style: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.35s ease, visibility 0s linear 0.35s;
+    }
+    .menu-tree li { padding-left: calc(var(--depth, 0) * var(--indent)); }
+    .menu-open .menu-tree {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.35s ease 0.15s, visibility 0s;
+    }
+
+    /* ---------------------------------------------------------------------
+       HOME PAGE — custom collage, centered and scaled to fit the screen
+       --------------------------------------------------------------------- */
+
+    .home { overflow: hidden; }
+    .home-stage {
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    /* The collage is drawn at 1960 x 920. Only the part with content is
+       shown (x 85-1925, y 25-905), so there's no empty border around it.
+       The box keeps that shape, stays centered, and takes the largest
+       size that fits between the menu, the top and the bottom text. */
+    .collage {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 1840 / 880;
+      /* --side = how far the open menu reaches, so the collage never sits
+         under it (measured by the script at the bottom of the page) */
+      width: min(
+        calc(100vw - 2 * var(--side, 280px)),
+        calc((100vh - 2 * (var(--pad-y) + 2.6em)) * 1840 / 880)
+      );
+    }
+    .collage canvas {
+      position: absolute;
+      display: block;
+      left: calc(-100% * 85 / 1840);
+      top: calc(-100% * 25 / 880);
+      width: calc(100% * 1960 / 1840) !important;
+      height: calc(100% * 920 / 880) !important;
+      touch-action: manipulation;     /* phones: taps respond right away (no double-tap zoom) */
+    }
+    /* each screen of the collage is slid so its content sits in the middle */
+    .collage[data-screen="home"] canvas { left: calc(100% * 195 / 1840); }
+    .collage[data-screen="finalCollage"] canvas { left: calc(-100% * 60 / 1840); }
+    .collage-loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .collage:has(canvas) .collage-loading { display: none; }
+
+    /* phones held upright: a small note under the collage */
+    .rotate-hint { display: none; margin-top: 1.4em; }
+    @media (max-width: 760px) and (orientation: portrait) {
+      .rotate-hint { display: block; }
+    }
+    /* phones held sideways: the collage as big as the screen allows */
+    @media (max-height: 500px) and (orientation: landscape) {
+      .home-stage .collage {
+        width: min(
+          calc(100vw - 2 * (var(--pad-x) + 2.4em)),
+          calc((100vh - 2 * (var(--pad-y) + 1.6em)) * 1840 / 880)
+        );
+      }
+    }
+
+    .about-link {
+      position: fixed;
+      right: var(--pad-x);
+      bottom: var(--pad-y);
+    }
+
+    /* ---------------------------------------------------------------------
+       PHONES
+       --------------------------------------------------------------------- */
+
+    @media (max-width: 760px) {
+      .collage { width: calc(100vw - 2 * var(--pad-x)); }
+      .hdr-line { position: absolute; }
+      .menu-tree {
+        left: 0;
+        right: 0;
+        bottom: 0;
+        max-height: none;
+        padding-left: calc(var(--pad-x) + var(--col));
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .site-name, .menu-tree { transition: none; }
+    }
+  </style>
+</head>
+<body class="home">
+
+  <main class="home-stage">
+    <div class="collage" id="collage">
+      <div class="collage-loading">Loading</div>
+    </div>
+    <p class="rotate-hint">Turn your phone sideways to play</p>
+  </main>
+
+  <!-- ABOUT: points to about.html (not made yet) -->
+  <a class="about-link" href="about.html">About</a>
+
+  <script>
+    /* =====================================================================
+       MENU — used by every page.
+
+       Each line:  [ "Label", "link.html", indent ]
+       indent: 0 = section, 1 = sub page, 2 = project
+
+       WHEN YOU MAKE A NEW PAGE: change its link here (e.g. "postcards.html").
+       That's the only place you need to change it.
+       ===================================================================== */
+
+    var MENU = [
+      ["Graphic Design",           "graphic-design.html#iconoclast",   0],
+      ["Iconoclast",               "graphic-design.html#iconoclast",   1],
+      ["Zaha Hadid",               "graphic-design.html#zaha-hadid",   1],
+      ["Code",                     "code.html#custom-collage",         0],
+      ["Custom Collage",           "code.html#custom-collage",         1],
+      ["Exquisite Corpse",         "code.html#exquisite-corpse",       1],
+      ["The Five Stages of Grief", "code.html#five-stages-of-grief",   1],
+      ["3D",                       "3d.html#room",                     0],
+      ["Room",                     "3d.html#room",                     1],
+      ["Sound & Video",            "sound-video.html#there-you-are",   0],
+      ["There You Are",            "sound-video.html#there-you-are",   1],
+      ["Melody Nelson",            "sound-video.html#melody-nelson",   1],
+      ["Projects",                 "projects.html#heritage",           0],
+      ["Heritage",                 "projects.html#heritage",           1],
+      ["ineverseeyou",             "projects.html#ineverseeyou",       1],
+      ["Juma",                     "projects.html#juma",               1],
+      ["About",                    "about.html",                       0]
+    ];
+
+    /* ===================================================================== */
+
+    (function () {
+      var body = document.body;
+      // which page is this? <body data-page="Postcards">  (empty on the home page)
+      var page = (body.getAttribute("data-page") || "").toLowerCase();
+      var here = -1;
+      MENU.forEach(function (m, i) { if (m[0].toLowerCase() === page) here = i; });
+
+      function link(m, current) {
+        var a = document.createElement("a");
+        a.href = m[1];
+        a.textContent = m[0];
+        if (current) a.className = "current";
+        return a;
+      }
+
+      // the items above this one: [section, sub page, project]
+      var trail = [];
+      if (here >= 0) {
+        trail[MENU[here][2]] = here;
+        for (var i = here - 1, d = MENU[here][2]; i >= 0 && d > 0; i--) {
+          if (MENU[i][2] < d) { d = MENU[i][2]; trail[d] = i; }
+        }
+      }
+      // the items directly inside item p
+      function childrenOf(p) {
+        var out = [];
+        for (var i = p + 1; i < MENU.length && MENU[i][2] > MENU[p][2]; i++) {
+          if (MENU[i][2] === MENU[p][2] + 1) out.push(i);
+        }
+        return out;
+      }
+
+      // ----- top line: menu icon + name -----
+      var line = document.createElement("div");
+      line.className = "hdr-line";
+      line.innerHTML =
+        '<button class="menu-btn" type="button" aria-label="Menu" aria-expanded="false">' +
+        "<span></span><span></span><span></span></button>" +
+        '<a class="site-name" href="index.html">Amandine Mangon</a>';
+      var btn = line.querySelector(".menu-btn");
+
+      // ----- full menu -----
+      var tree = document.createElement("ul");
+      tree.className = "menu-tree";
+      MENU.forEach(function (m, i) {
+        var li = document.createElement("li");
+        li.style.setProperty("--depth", m[2]);
+        li.appendChild(link(m, i === here));
+        tree.appendChild(li);
+      });
+
+      // ----- section + sub pages (inner pages only) -----
+      var nav = null;
+      if (here >= 0) {
+        nav = document.createElement("nav");
+        nav.className = "section-nav";
+        var r1 = document.createElement("div");
+        r1.className = "nav-row";
+        r1.appendChild(link(MENU[trail[0]], false));
+        nav.appendChild(r1);
+        [0, 1].forEach(function (level) {
+          if (trail[level] === undefined) return;
+          var kids = childrenOf(trail[level]);
+          if (!kids.length) return;
+          var row = document.createElement("div");
+          row.className = "nav-row";
+          kids.forEach(function (k) { row.appendChild(link(MENU[k], k === trail[level + 1])); });
+          nav.appendChild(row);
+        });
+      }
+
+      body.insertBefore(tree, body.firstChild);
+      if (nav) body.insertBefore(nav, body.firstChild);
+      body.insertBefore(line, body.firstChild);
+
+      if (here >= 0) {
+        body.classList.add("no-anim", "name-right");
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () { body.classList.remove("no-anim"); });
+        });
+      }
+
+      // ----- open / close -----
+      function setMenu(open) {
+        body.classList.toggle("menu-open", open);
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+        if (here < 0) body.classList.toggle("name-right", open);   // home page: name slides right
+      }
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        setMenu(!body.classList.contains("menu-open"));
+      });
+      document.addEventListener("click", function (e) {
+        if (body.classList.contains("menu-open") && !tree.contains(e.target)) setMenu(false);
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") setMenu(false);
+      });
+
+      // keep content below the header
+      function setHeaderHeight() {
+        var b = btn.getBoundingClientRect().bottom + window.scrollY;
+        if (nav) b = Math.max(b, nav.getBoundingClientRect().bottom + window.scrollY);
+        document.documentElement.style.setProperty("--header-h", Math.ceil(b) + "px");
+      }
+      setHeaderHeight();
+      window.addEventListener("resize", setHeaderHeight);
+    })();
+  </script>
+
+  <script>
+    // keep the collage clear of the menu: leave the same space on both sides
+    (function () {
+      var tree = document.querySelector(".menu-tree");
+      function setSide() {
+        var right = tree.getBoundingClientRect().right;
+        document.documentElement.style.setProperty("--side", Math.ceil(right + 24) + "px");
+      }
+      setSide();
+      window.addEventListener("resize", setSide);
+      if (document.fonts) document.fonts.ready.then(setSide);
+    })();
+  </script>
+
+  <!--
+    Your old homepage statement, saved here for the About page:
+
+    Exploring memory, relationships, and visual story telling. From hand-cut postcards to
+    experimental design works at NYU's Integrated Design and Media program, each project plays
+    with tension between image and language. Some pieces are intimate gifts, others reflect
+    girlhood, reconstruction, and the small moments that build a life. All are poetic, a little
+    strange, and always personal.
+  -->
+</body>
+</html>
